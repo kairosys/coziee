@@ -1,0 +1,78 @@
+version: "3"
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto-config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    environment:
+      - TZ=Asia/Hong_Kong
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt
+    depends_on:
+      - mosquitto
+    volumes:
+      - zigbee2mqtt-data:/app/data
+      - /run/udev:/run/udev:ro
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    # user: "1000:1000"
+    # group_add:
+    #   - dialout
+    restart: always
+    network_mode: host
+    privileged: true
+    environment:
+      - TZ=Asia/Hong_Kong
+
+  homebridge:
+    container_name: homebridge
+    image: oznu/homebridge:latest
+    depends_on:
+      - mosquitto
+    restart: always
+    network_mode: host
+    environment:
+      - TZ=Asia/Hong_Kong
+      - PGID=1000
+      - PUID=1000
+      - HOMEBRIDGE_CONFIG_UI=1
+      - HOMEBRIDGE_CONFIG_UI_PORT=8581
+    volumes:
+      - homebridge:/homebridge
+
+  nodered:
+    container_name: nodered
+    image: nodered/node-red
+    depends_on:
+      - mosquitto
+      - homebridge
+    restart: unless-stopped
+    ports:
+      - "1880:1880"
+    volumes:
+      - nodered-data:/data
+    environment:
+      - TZ=Asia/Hong_Kong
+
+volumes:
+  mosquitto-config:
+    name: mosquitto-config
+  mosquitto-data:
+    name: mosquitto-data
+  mosquitto-log:
+    name: mosquitto-log
+  zigbee2mqtt-data:
+    name: zigbee2mqtt-data
+  homebridge:
+    name: homebridge
+  nodered-data:
+    name: nodered-data
