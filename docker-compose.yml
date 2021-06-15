@@ -24,9 +24,6 @@ services:
       - /run/udev:/run/udev:ro
     devices:
       - /dev/ttyACM0:/dev/ttyACM0
-    # user: "1000:1000"
-    # group_add:
-    #   - dialout
     restart: always
     network_mode: host
     privileged: true
