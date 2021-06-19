@@ -145,7 +145,7 @@
     $ docker exec -it mosquitto vi /mosquitto/config/mosquitto.conf
     ```
 * Update the following:
-    ```
+    ```conf
     ...
     listener 1883
     ...
@@ -238,7 +238,7 @@
     $ docker run --rm -it -v telegraf-vol:/etc/telegraf alpine vi /etc/telegraf/telegraf.conf
     ```
 * Update the following:
-    ```
+    ```conf
     ...
     # Configuration for sending metrics to InfluxDB
     # [[outputs.influxdb]]
@@ -249,7 +249,7 @@
       urls = ["http://influxdb:8086"]
 
       ## Token for authentication.
-      token = ""
+      token = "$TOKEN"
 
       ## Organization is the name of the organization you wish to write to; must exist.
       organization = "coziee"
@@ -289,12 +289,40 @@
 
 ## 10. Configure `nodered` container
 
-* NodeRed: http://raspberrypi.local:1880
+* Generating the password hash
+    ```shell
+    $ docker exec -it nodered node-red admin hash-pw
+    $ docker exec -it nodered node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" your-password-here
+    ```
+* Edit `settings.js`:
+    ```shell
+    $ docker exec -it nodered vi /data/settings.js
+    ```
+* Update the following:
+    ```js
+    adminAuth: {
+        type: "credentials",
+        users: [{
+            username: "admin",
+            password: "$PASSWORD_HASH",
+            permissions: "*"
+        }]
+    },
+    ```
+* Restart container:
+    ```shell
+    $ docker compose restart nodered
+    ```
+* NodeRed Editor: http://raspberrypi.local:1880
 
 ## 11. Backup Configurations
+
+* Backup configuration files
     ```shell
     $ scp pi@raspberrypi.local:/var/lib/docker/volumes/mosquitto-config-vol/_data/mosquitto.conf ~/Workspaces/coziee/backup
     $ scp pi@raspberrypi.local:/var/lib/docker/volumes/mosquitto-config-vol/_data/passwd ~/Workspaces/coziee/backup
     $ scp pi@raspberrypi.local:/var/lib/docker/volumes/zigbee2mqtt-vol/_data/configuration.yaml ~/Workspaces/coziee/backup
+    $ scp pi@raspberrypi.local:/var/lib/docker/volumes/homebridge-vol/_data/config.json ~/Workspaces/coziee/backup
+    $ scp pi@raspberrypi.local:/var/lib/docker/volumes/nodered-vol/_data/settings.js ~/Workspaces/coziee/backup
     $ scp pi@raspberrypi.local:/var/lib/docker/volumes/telegraf-vol/_data/telegraf.conf ~/Workspaces/coziee/backup
     ```
