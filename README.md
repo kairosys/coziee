@@ -12,6 +12,7 @@
 - [8. Configure `influxdb` container](#8-configure-influxdb-container)
 - [9. Configure `telegraf` container](#9-configure-telegraf-container)
 - [10. Configure `nodered` container](#10-configure-nodered-container)
+- [11. Backup Configurations](#11-backup-configurations)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -251,14 +252,18 @@
       token = ""
 
       ## Organization is the name of the organization you wish to write to; must exist.
-      organization = "Coziee"
+      organization = "coziee"
 
       ## Destination bucket to write into.
-      bucket = "IoT"
+      bucket = "iot"
+
+      namepass = ["sensor"]
     ...
     # Read metrics from MQTT topic(s)
     [[inputs.mqtt_consumer]]
     ...
+      name_override = "sensor"
+
       ## Broker URLs for the MQTT server or cluster.
       servers = ["tcp://mosquitto:1883"]
 
@@ -274,7 +279,8 @@
       password = ""
     ...
       ## Data format to consume.
-      data_format = "influx"
+      data_format = "value"
+      data_type = "float"
     ```
 * Restart container:
     ```shell
@@ -284,3 +290,11 @@
 ## 10. Configure `nodered` container
 
 * NodeRed: http://raspberrypi.local:1880
+
+## 11. Backup Configurations
+    ```shell
+    $ scp pi@raspberrypi.local:/var/lib/docker/volumes/mosquitto-config-vol/_data/mosquitto.conf ~/Workspaces/coziee/backup
+    $ scp pi@raspberrypi.local:/var/lib/docker/volumes/mosquitto-config-vol/_data/passwd ~/Workspaces/coziee/backup
+    $ scp pi@raspberrypi.local:/var/lib/docker/volumes/zigbee2mqtt-vol/_data/configuration.yaml ~/Workspaces/coziee/backup
+    $ scp pi@raspberrypi.local:/var/lib/docker/volumes/telegraf-vol/_data/telegraf.conf ~/Workspaces/coziee/backup
+    ```
