@@ -1,4 +1,4 @@
-# Coziee - Home Automation System
+# Coziee - Smart Home Automation System
 
 
 ## Table of Contents <!-- omit in toc -->
@@ -9,7 +9,9 @@
 - [5. Configure `mosquitto` container](#5-configure-mosquitto-container)
 - [6. Configure `zigbee2mqtt` container](#6-configure-zigbee2mqtt-container)
 - [7. Configure `homebridge` container](#7-configure-homebridge-container)
-- [8. Configure `nodered` container](#8-configure-nodered-container)
+- [8. Configure `influxdb` container](#8-configure-influxdb-container)
+- [9. Configure `telegraf` container](#9-configure-telegraf-container)
+- [10. Configure `nodered` container](#10-configure-nodered-container)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -138,9 +140,10 @@
 
 * Edit `mosquitto.conf`:
     ```shell
-    $ docker exec -it mosquitto /bin/sh vi /mosquitto/config/mosquitto.conf
+    $ docker exec -it mosquitto mosquitto_passwd -c /mosquitto/config/passwd coziee
+    $ docker exec -it mosquitto vi /mosquitto/config/mosquitto.conf
     ```
-* Add the following:
+* Update the following:
     ```
     ...
     listener 1883
@@ -151,7 +154,9 @@
     ...
     log_dest file /mosquitto/log/mosquitto.log
     ...
-    allow_anonymous true
+    allow_anonymous false
+    ...
+    password_file /mosquitto/config/passwd
     ...
     ```
 * Restart container:
@@ -165,23 +170,29 @@
     ```shell
     $ docker exec -it zigbee2mqtt vi /app/data/configuration.yaml
     ```
-* add the following:
+* Update the following:
     ```yaml
     ...
+    mqtt:
+      ...
+      # Optional: MQTT server authentication user (default: nothing)
+      user: my_user
+      # Optional: MQTT server authentication password (default: nothing)
+      password: my_password
     serial:
-        ...
-        # Optional: disable LED of the adapter if supported (default: false)
-        disable_led: false
+      ...
+      # Optional: disable LED of the adapter if supported (default: false)
+      disable_led: false
 
     frontend:
-        # Optional, default 8080
-        port: 8008
-        # Optional, default 0.0.0.0
-        host: 0.0.0.0
-        # Optional, enables authentication, disabled by default
-        auth_token: your-secret-token
+      # Optional, default 8080
+      port: 8008
+      # Optional, default 0.0.0.0
+      host: 0.0.0.0
+      # Optional, enables authentication, disabled by default
+      auth_token: your-secret-token
     ```
-* Restart containers:
+* Restart container:
     ```shell
     $ docker compose restart zigbee2mqtt
     ```
@@ -201,13 +212,75 @@
 * [Install `homebridge-z2m` plugin](https://z2m.dev/install.html)
     - Base topic: zigbee2mqtt (default)
     - Server: mqtt://localhost:1883 (default)
-    - Zigbee Identifier / Friendly name: living_occupancy
 * [Install `homebridge-platform-wemo` plugin](https://github.com/bwp91/homebridge-platform-wemo/wiki/Installation)
 * [Install `homebridge-tplink-smarthome` plugin](https://github.com/plasticrake/homebridge-tplink-smarthome#homebridge-config-ui-x-installation)
 * [Install `homebridge-dyson-pure-cool` plugin](https://github.com/lukasroegner/homebridge-dyson-pure-cool#installation)
     - [Retrieve Credentials (Serial & Credentials)](https://github.com/lukasroegner/homebridge-dyson-pure-cool#retrieve-credentials)
 * Restart Homebridge to reload plugins configuration
 
-## 8. Configure `nodered` container
+## 8. Configure `influxdb` container
+
+* Setup at: http://raspberrypi.local:8086
+    - Username
+    - Password
+    - Inital Organization Name: Coziee
+    - Initial Bucket Name: IoT
+* Date > Tokens > Generate Token > Read / Write Token
+    - Description: coziee's Token
+    - Read > Scoped > Buckets: Iot
+    - Write > Scoped > Buckets: Iot 
+
+## 9. Configure `telegraf` container
+
+* Edit `telegraf.conf`:
+    ```shell
+    $ docker run --rm -it -v telegraf-vol:/etc/telegraf alpine vi /etc/telegraf/telegraf.conf
+    ```
+* Update the following:
+    ```
+    ...
+    # Configuration for sending metrics to InfluxDB
+    # [[outputs.influxdb]]
+    ...
+    # Configuration for sending metrics to InfluxDB
+    [[outputs.influxdb_v2]]
+      ## The URLs of the InfluxDB cluster nodes.
+      urls = ["http://influxdb:8086"]
+
+      ## Token for authentication.
+      token = ""
+
+      ## Organization is the name of the organization you wish to write to; must exist.
+      organization = "Coziee"
+
+      ## Destination bucket to write into.
+      bucket = "IoT"
+    ...
+    # Read metrics from MQTT topic(s)
+    [[inputs.mqtt_consumer]]
+    ...
+      ## Broker URLs for the MQTT server or cluster.
+      servers = ["tcp://mosquitto:1883"]
+
+      ## Topics that will be subscribed to.
+      topics = [
+        "telegraf/host01/cpu",
+        "telegraf/+/mem",
+        "sensors/#",
+      ]
+    ...
+      ## Username and password to connect MQTT server.
+      username = ""
+      password = ""
+    ...
+      ## Data format to consume.
+      data_format = "influx"
+    ```
+* Restart container:
+    ```shell
+    $ docker compose restart telegraf
+    ```
+
+## 10. Configure `nodered` container
 
 * NodeRed: http://raspberrypi.local:1880

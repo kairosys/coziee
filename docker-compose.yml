@@ -8,9 +8,9 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - mosquitto-config:/mosquitto/config
-      - mosquitto-data:/mosquitto/data
-      - mosquitto-log:/mosquitto/log
+      - mosquitto-config-vol:/mosquitto/config
+      - mosquitto-data-vol:/mosquitto/data
+      - mosquitto-log-vol:/mosquitto/log
     environment:
       - TZ=Asia/Hong_Kong
 
@@ -19,12 +19,12 @@ services:
     image: koenkk/zigbee2mqtt
     depends_on:
       - mosquitto
+    restart: unless-stopped
     volumes:
-      - zigbee2mqtt-data:/app/data
+      - zigbee2mqtt-vol:/app/data
       - /run/udev:/run/udev:ro
     devices:
       - /dev/ttyACM0:/dev/ttyACM0
-    restart: always
     network_mode: host
     privileged: true
     environment:
@@ -35,16 +35,40 @@ services:
     image: oznu/homebridge:latest
     depends_on:
       - mosquitto
-    restart: always
+    restart: unless-stopped
     network_mode: host
     environment:
-      - TZ=Asia/Hong_Kong
       - PGID=1000
       - PUID=1000
       - HOMEBRIDGE_CONFIG_UI=1
       - HOMEBRIDGE_CONFIG_UI_PORT=8581
+      - TZ=Asia/Hong_Kong
     volumes:
-      - homebridge:/homebridge
+      - homebridge-vol:/homebridge
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data-vol:/var/lib/influxdb2
+      - influxdb-config-vol:/etc/influxdb2
+    environment:
+      - TZ=Asia/Hong_Kong
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf
+    depends_on:
+      - mosquitto
+      - influxdb
+    restart: unless-stopped
+    volumes:
+      - telegraf-vol:/etc/telegraf
+    environment:
+      - TZ=Asia/Hong_Kong
 
   nodered:
     container_name: nodered
@@ -56,20 +80,26 @@ services:
     ports:
       - "1880:1880"
     volumes:
-      - nodered-data:/data
+      - nodered-vol:/data
     environment:
       - TZ=Asia/Hong_Kong
 
 volumes:
-  mosquitto-config:
-    name: mosquitto-config
-  mosquitto-data:
-    name: mosquitto-data
-  mosquitto-log:
-    name: mosquitto-log
-  zigbee2mqtt-data:
-    name: zigbee2mqtt-data
-  homebridge:
-    name: homebridge
-  nodered-data:
-    name: nodered-data
+  mosquitto-config-vol:
+    name: mosquitto-config-vol
+  mosquitto-data-vol:
+    name: mosquitto-data-vol
+  mosquitto-log-vol:
+    name: mosquitto-log-vol
+  influxdb-data-vol:
+    name: influxdb-data-vol
+  influxdb-config-vol:
+    name: influxdb-config-vol
+  telegraf-vol:
+    name: telegraf-vol
+  zigbee2mqtt-vol:
+    name: zigbee2mqtt-vol
+  homebridge-vol:
+    name: homebridge-vol
+  nodered-vol:
+    name: nodered-vol
