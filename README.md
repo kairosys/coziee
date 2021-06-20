@@ -11,8 +11,9 @@
 - [7. Configure `homebridge` container](#7-configure-homebridge-container)
 - [8. Configure `nodered` container](#8-configure-nodered-container)
 - [9. Backup & Restore Configurations](#9-backup--restore-configurations)
-- [10. Backup & Restore Raspberry Pi SD Card](#10-backup--restore-raspberry-pi-sd-card)
-- [11. Check System Information of Raspberry Pi](#11-check-system-information-of-raspberry-pi)
+- [10. Backup & Restore Raspberry Pi SD Card (with `dd` command)](#10-backup--restore-raspberry-pi-sd-card-with-dd-command)
+- [11. Backup & Restore Raspberry Pi SD Card (with `gdd` command)](#11-backup--restore-raspberry-pi-sd-card-with-gdd-command)
+- [12. Check System Information of Raspberry Pi](#12-check-system-information-of-raspberry-pi)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -304,7 +305,7 @@
     $ docker cp -a settings.js nodered:/data
     ```
 
-## 10. Backup & Restore Raspberry Pi SD Card
+## 10. Backup & Restore Raspberry Pi SD Card (with `dd` command)
 
 * Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
     ```shell
@@ -317,7 +318,7 @@
 * Use `dd` command to backup SD card via raw disk `/dev/rdiskX` and pipe through `pv` command with the provide of input size:
     ```shell
     $ cd ~/Downloads
-    $ sudo dd bs=1m if=/dev/rdisk6 | pv -s 16G | sudo dd bs=1m of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg
+    $ sudo dd if=/dev/rdisk6 bs=1m  | pv -s 16G | sudo dd of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1m
     ```
 * Alternatively for macOS, pressing `CTRL+T` to track the progress of `dd` command.
     ```shell
@@ -329,10 +330,31 @@
 * Use `dd` command to restore SD card:
     ```shell
     $ diskutil unmountDisk /dev/disk6
-    $ sudo dd bs=1m if=rpi_armhf_coziee_YYYY-MM-DD.dmg | pv -s 16G | sudo dd bs=1m of=/dev/rdisk6
+    $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/rdisk6 bs=1m
     ```
 
-## 11. Check System Information of Raspberry Pi 
+## 11. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
+
+* Install `coreutils` with a version of `dd` command that supports the status option.
+    ```shell
+    $ brew install coreutils
+    ```
+* Identify SD card name:
+    ```shell
+    $ diskutil list
+    ```
+* Use `gdd` command to backup SD card via raw disk `/dev/rdiskX` with status option:
+    ```shell
+    $ cd ~/Downloads
+    $ sudo gdd if=/dev/rdisk6 of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1M status=progress
+    ```
+* Use `gdd` command to restore SD card:
+    ```shell
+    $ diskutil unmountDisk /dev/disk6
+    $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg of=/dev/rdisk6 bs=1M status=progress
+    ```
+
+## 12. Check System Information of Raspberry Pi 
 
 * Print system information
     ```shell
