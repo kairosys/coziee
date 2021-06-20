@@ -13,6 +13,7 @@
 - [9. Configure `telegraf` container](#9-configure-telegraf-container)
 - [10. Configure `nodered` container](#10-configure-nodered-container)
 - [11. Backup & Restore Configurations](#11-backup--restore-configurations)
+- [12. Backup & Restore Raspberry Pi SD Card](#12-backup--restore-raspberry-pi-sd-card)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -364,4 +365,32 @@
     $ docker cp config.json homebridge:/homebridge
     $ docker cp telegraf.conf telegraf:/etc/telegraf
     $ docker cp settings.js nodered:/data
+    ```
+
+## 12. Backup & Restore Raspberry Pi SD Card
+
+* Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
+    ```shell
+    $ brew install pv
+    ```
+* Identify SD card name:
+    ```shell
+    $ diskutil list
+    ```
+* Use `dd` command to backup SD card via raw disk `/dev/rdiskX` and pipe through `pv` command with the provide of input size:
+    ```shell
+    $ cd ~/Downloads
+    $ sudo dd bs=1m if=/dev/rdisk6 | pv -s 16G | sudo dd bs=1m of=rpi_coziee_"`date +"%Y-%m-%d"`".dmg
+    ```
+* Alternatively for macOS, pressing `CTRL+T` to track the progress of `dd` command.
+    ```shell
+    load: 2.11  cmd: dd 6323 uninterruptible 0.00u 1.85s
+    7798+0 records in
+    7798+0 records out
+    8176795648 bytes transferred in 785.410470 secs (10410856 bytes/sec)
+    ```
+* Use `dd` command to restore SD card:
+    ```shell
+    $ diskutil unmountDisk /dev/disk6
+    $ sudo dd bs=1m if=rpi_coziee_YYYY-MM-DD.dmg | pv -s 16G | sudo dd bs=1m of=/dev/rdisk6
     ```
