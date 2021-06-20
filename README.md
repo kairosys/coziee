@@ -14,6 +14,7 @@
 - [10. Configure `nodered` container](#10-configure-nodered-container)
 - [11. Backup & Restore Configurations](#11-backup--restore-configurations)
 - [12. Backup & Restore Raspberry Pi SD Card](#12-backup--restore-raspberry-pi-sd-card)
+- [Check System Information of Raspberry Pi](#check-system-information-of-raspberry-pi)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -393,4 +394,19 @@
     ```shell
     $ diskutil unmountDisk /dev/disk6
     $ sudo dd bs=1m if=rpi_coziee_YYYY-MM-DD.dmg | pv -s 16G | sudo dd bs=1m of=/dev/rdisk6
+    ```
+
+## Check System Information of Raspberry Pi 
+
+* Display Linux processes:
+    ```shell
+    $ top -i
+    ```
+* Display amount of free and used memory in the system:
+    ```shell
+    $ free -h
+    ```
+* Report file system disk space usage
+    ```shell
+    $ df -h
     ```
