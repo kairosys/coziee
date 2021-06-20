@@ -9,16 +9,15 @@
 - [5. Configure `mosquitto` container](#5-configure-mosquitto-container)
 - [6. Configure `zigbee2mqtt` container](#6-configure-zigbee2mqtt-container)
 - [7. Configure `homebridge` container](#7-configure-homebridge-container)
-- [8. Configure `influxdb` container](#8-configure-influxdb-container)
-- [9. Configure `telegraf` container](#9-configure-telegraf-container)
-- [10. Configure `nodered` container](#10-configure-nodered-container)
-- [11. Backup & Restore Configurations](#11-backup--restore-configurations)
-- [12. Backup & Restore Raspberry Pi SD Card](#12-backup--restore-raspberry-pi-sd-card)
-- [Check System Information of Raspberry Pi](#check-system-information-of-raspberry-pi)
+- [8. Configure `nodered` container](#8-configure-nodered-container)
+- [9. Backup & Restore Configurations](#9-backup--restore-configurations)
+- [10. Backup & Restore Raspberry Pi SD Card](#10-backup--restore-raspberry-pi-sd-card)
+- [11. Check System Information of Raspberry Pi](#11-check-system-information-of-raspberry-pi)
 
 ## 1. Install & Configure Raspberry Pi OS
 
-* [Download Raspberry Pi OS 64-bit lite](https://downloads.raspberrypi.org/raspios_lite_arm64/images/)
+* [Download Raspberry Pi OS Lite (32-bit)](https://www.raspberrypi.org/software/operating-systems/)
+* [Download Raspberry Pi OS Lite (64-bit) beta](https://downloads.raspberrypi.org/raspios_lite_arm64/images/)
 * [Install Raspberry Pi OS using Raspberry Pi Imager](https://www.raspberrypi.org/software/)
 * [Setting up a Raspberry Pi headless](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 * [Enable SSH on a headless Raspberry Pi](https://www.raspberrypi.org/documentation/remote-access/ssh/README.md)
@@ -150,8 +149,6 @@
     $ docker pull eclipse-mosquitto
     $ docker pull koenkk/zigbee2mqtt
     $ docker pull oznu/homebridge
-    $ docker pull influxdb
-    $ docker pull telegraf
     $ docker pull nodered/node-red
     ```
 * Connect docker remote host with Context
@@ -249,75 +246,7 @@
     - [Retrieve Credentials (Serial & Credentials)](https://github.com/lukasroegner/homebridge-dyson-pure-cool#retrieve-credentials)
 * Restart Homebridge to reload plugins configuration
 
-## 8. Configure `influxdb` container
-
-* Setup at: http://raspberrypi.local:8086
-    - Username
-    - Password
-    - Inital Organization Name: Coziee
-    - Initial Bucket Name: IoT
-* Date > Tokens > Generate Token > Read / Write Token
-    - Description: coziee's Token
-    - Read > Scoped > Buckets: Iot
-    - Write > Scoped > Buckets: Iot 
-
-## 9. Configure `telegraf` container
-
-* Edit `telegraf.conf`:
-    ```shell
-    $ docker run --rm -it -v telegraf-vol:/etc/telegraf alpine vi /etc/telegraf/telegraf.conf
-    ```
-* Update as follow:
-    ```conf
-    ...
-    # Configuration for sending metrics to InfluxDB
-    # [[outputs.influxdb]]
-    ...
-    # Configuration for sending metrics to InfluxDB
-    [[outputs.influxdb_v2]]
-      ## The URLs of the InfluxDB cluster nodes.
-      urls = ["http://influxdb:8086"]
-
-      ## Token for authentication.
-      token = "$TOKEN"
-
-      ## Organization is the name of the organization you wish to write to; must exist.
-      organization = "coziee"
-
-      ## Destination bucket to write into.
-      bucket = "iot"
-
-      namepass = ["sensor"]
-    ...
-    # Read metrics from MQTT topic(s)
-    [[inputs.mqtt_consumer]]
-    ...
-      name_override = "sensor"
-
-      ## Broker URLs for the MQTT server or cluster.
-      servers = ["tcp://mosquitto:1883"]
-
-      ## Topics that will be subscribed to.
-      topics = [
-        "telegraf/host01/cpu",
-        "telegraf/+/mem",
-        "sensors/#",
-      ]
-    ...
-      ## Username and password to connect MQTT server.
-      username = ""
-      password = ""
-    ...
-      ## Data format to consume.
-      data_format = "value"
-      data_type = "float"
-    ```
-* Restart container:
-    ```shell
-    $ docker compose restart telegraf
-    ```
-
-## 10. Configure `nodered` container
+## 8. Configure `nodered` container
 
 * Generating the password hash
     ```shell
@@ -345,30 +274,28 @@
     ```
 * NodeRed Editor: http://raspberrypi.local:1880
 
-## 11. Backup & Restore Configurations
+## 9. Backup & Restore Configurations
 
 * Backup configuration files:
     ```shell
     $ cd ~/Workspaces/coziee/backup
-    $ docker cp mosquitto:/mosquitto/config/mosquitto.conf .
-    $ docker cp mosquitto:/mosquitto/config/passwd .
-    $ docker cp zigbee2mqtt:/app/data/configuration.yaml .
-    $ docker cp homebridge:/homebridge/config.json .
-    $ docker cp telegraf:/etc/telegraf/telegraf.conf .
-    $ docker cp nodered:/data/settings.js .
+    $ docker cp -a mosquitto:/mosquitto/config/mosquitto.conf .
+    $ docker cp -a mosquitto:/mosquitto/config/passwd .
+    $ docker cp -a zigbee2mqtt:/app/data/configuration.yaml .
+    $ docker cp -a homebridge:/homebridge/config.json .
+    $ docker cp -a nodered:/data/settings.js .
     ```
 * Restore configuration files:
     ```shell
     $ cd ~/Workspaces/coziee/backup
-    $ docker cp mosquitto.conf mosquitto:/mosquitto/config
-    $ docker cp passwd mosquitto:/mosquitto/config
-    $ docker cp configuration.yaml zigbee2mqtt:/app/data
-    $ docker cp config.json homebridge:/homebridge
-    $ docker cp telegraf.conf telegraf:/etc/telegraf
-    $ docker cp settings.js nodered:/data
+    $ docker cp -a mosquitto.conf mosquitto:/mosquitto/config
+    $ docker cp -a passwd mosquitto:/mosquitto/config
+    $ docker cp -a configuration.yaml zigbee2mqtt:/app/data
+    $ docker cp -a config.json homebridge:/homebridge
+    $ docker cp -a settings.js nodered:/data
     ```
 
-## 12. Backup & Restore Raspberry Pi SD Card
+## 10. Backup & Restore Raspberry Pi SD Card
 
 * Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
     ```shell
@@ -396,7 +323,7 @@
     $ sudo dd bs=1m if=rpi_coziee_YYYY-MM-DD.dmg | pv -s 16G | sudo dd bs=1m of=/dev/rdisk6
     ```
 
-## Check System Information of Raspberry Pi 
+## 11. Check System Information of Raspberry Pi 
 
 * Display Linux processes:
     ```shell

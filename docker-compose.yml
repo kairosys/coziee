@@ -46,30 +46,6 @@ services:
     volumes:
       - homebridge-vol:/homebridge
 
-  influxdb:
-    container_name: influxdb
-    image: influxdb
-    restart: unless-stopped
-    ports:
-      - "8086:8086"
-    volumes:
-      - influxdb-data-vol:/var/lib/influxdb2
-      - influxdb-config-vol:/etc/influxdb2
-    environment:
-      - TZ=Asia/Hong_Kong
-
-  telegraf:
-    container_name: telegraf
-    image: telegraf
-    depends_on:
-      - mosquitto
-      - influxdb
-    restart: unless-stopped
-    volumes:
-      - telegraf-vol:/etc/telegraf
-    environment:
-      - TZ=Asia/Hong_Kong
-
   nodered:
     container_name: nodered
     image: nodered/node-red
@@ -91,12 +67,6 @@ volumes:
     name: mosquitto-data-vol
   mosquitto-log-vol:
     name: mosquitto-log-vol
-  influxdb-data-vol:
-    name: influxdb-data-vol
-  influxdb-config-vol:
-    name: influxdb-config-vol
-  telegraf-vol:
-    name: telegraf-vol
   zigbee2mqtt-vol:
     name: zigbee2mqtt-vol
   homebridge-vol:
