@@ -24,8 +24,12 @@
 * SSH into Raspberry Pi (Basic Setup)
     ```shell
     $ ssh pi@raspberrypi.local
-    # Default Password: raspberry
+    # Default password: raspberry
     $ passwd
+
+    # Check the status of WiFi connection
+    $ iwconfig
+    $ cat /etc/wpa_supplicant/wpa_supplicant.conf
 
     $ sudo raspi-config
     # System Options > Hostname
@@ -34,10 +38,6 @@
     # Localosation Options > WLAN Country
     # Advanced Options > Expand Filesystem
     # Update
-
-    $ iwconfig
-    $ cat /etc/wpa_supplicant/wpa_supplicant.conf
-    $ df -h
 
     # Update package list
     $ sudo apt update
@@ -48,7 +48,7 @@
     # Reboot
     $ sudo shutdown -r now
     ```
-* To fix messages about locale settings:
+* To fix the following warning messages about locale settings:
     ```shell
     perl: warning: Setting locale failed.
     perl: warning: Please check that your locale settings:
@@ -106,7 +106,7 @@
     $ docker version
 
     # Test with `hello-world` image
-    $ sudo docker run --rm hello-world
+    $ docker run --rm hello-world
     ```
 * Install Docker Compose on Raspberry Pi OS
     ```shell
@@ -144,6 +144,13 @@
 
 ## 4. Run `Coziee` containers on Raspberry Pi
 
+* Connect docker remote host with context
+    ```shell
+    $ docker context create rpi --docker "host=ssh://pi@raspberrypi.local"
+    $ docker context ls
+    $ docker context use rpi
+    $ docker ps
+    ```
 * Docker pull images at Raspberry Pi
     ```shell
     $ docker pull eclipse-mosquitto
@@ -151,15 +158,9 @@
     $ docker pull oznu/homebridge
     $ docker pull nodered/node-red
     ```
-* Connect docker remote host with Context
-    ```shell
-    $ docker context create rpi --docker "host=ssh://pi@raspberrypi.local"
-    $ docker context ls
-    $ docker context use rpi
-    $ docker ps
-    ```
 * Start Coziee with docker compose on Raspberry Pi
     ```shell
+    $ cd ~/Workspaces/coziee
     $ docker context use rpi
     $ docker compose config
     $ docker compose up -d
@@ -171,6 +172,7 @@
 * Edit `mosquitto.conf`:
     ```shell
     $ docker exec -it mosquitto mosquitto_passwd -c /mosquitto/config/passwd coziee
+    $ docker exec -it mosquitto ls -latr /mosquitto/config
     $ docker exec -it mosquitto vi /mosquitto/config/mosquitto.conf
     ```
 * Update as follow:
@@ -182,6 +184,7 @@
     ...
     persistence_location /mosquitto/data
     ...
+    log_dest stderr
     log_dest file /mosquitto/log/mosquitto.log
     ...
     password_file /mosquitto/config/passwd
@@ -203,14 +206,16 @@
     ...
     mqtt:
       ...
-      # Optional: MQTT server authentication user (default: nothing)
+      # MQTT server URL
+      server: 'mqtt://localhost'
+      # MQTT server authentication, uncomment if required:
       user: my_user
-      # Optional: MQTT server authentication password (default: nothing)
       password: my_password
     serial:
-      ...
+      # Location of CC2531 USB sniffer
+      port: /dev/ttyACM0
       # Optional: disable LED of the adapter if supported (default: false)
-      disable_led: false
+      disable_led: true
 
     frontend:
       # Optional, default 8080
@@ -234,17 +239,21 @@
 
 * Homebridge UI: http://raspberrypi.local:8581
     - Default User: admin
-    - Default password: password
+    - Default password: admin
 * Setup Users: Setting > User Accounts > Administrator > Edit
-* Scan the QR code with the camera on iOS device to add to Apple Home.
 * [Install `homebridge-z2m` plugin](https://z2m.dev/install.html)
     - Base topic: zigbee2mqtt (default)
     - Server: mqtt://localhost:1883 (default)
+    - Username: coziee
+    - Password
 * [Install `homebridge-platform-wemo` plugin](https://github.com/bwp91/homebridge-platform-wemo/wiki/Installation)
 * [Install `homebridge-tplink-smarthome` plugin](https://github.com/plasticrake/homebridge-tplink-smarthome#homebridge-config-ui-x-installation)
 * [Install `homebridge-dyson-pure-cool` plugin](https://github.com/lukasroegner/homebridge-dyson-pure-cool#installation)
-    - [Retrieve Credentials (Serial & Credentials)](https://github.com/lukasroegner/homebridge-dyson-pure-cool#retrieve-credentials)
 * Restart Homebridge to reload plugins configuration
+* [Retrieve Credentials (Serial & Credentials) for Dyson device](https://github.com/lukasroegner/homebridge-dyson-pure-cool#retrieve-credentials)
+    - Open a browser and navigate to: http://raspberrypi.local:48000
+* Scan the QR code with the camera on iOS device to add to Apple Home.
+* Setting > Backup / Restore > Download Backup Archive
 
 ## 8. Configure `nodered` container
 
@@ -308,7 +317,7 @@
 * Use `dd` command to backup SD card via raw disk `/dev/rdiskX` and pipe through `pv` command with the provide of input size:
     ```shell
     $ cd ~/Downloads
-    $ sudo dd bs=1m if=/dev/rdisk6 | pv -s 16G | sudo dd bs=1m of=rpi_coziee_"`date +"%Y-%m-%d"`".dmg
+    $ sudo dd bs=1m if=/dev/rdisk6 | pv -s 16G | sudo dd bs=1m of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg
     ```
 * Alternatively for macOS, pressing `CTRL+T` to track the progress of `dd` command.
     ```shell
@@ -320,11 +329,19 @@
 * Use `dd` command to restore SD card:
     ```shell
     $ diskutil unmountDisk /dev/disk6
-    $ sudo dd bs=1m if=rpi_coziee_YYYY-MM-DD.dmg | pv -s 16G | sudo dd bs=1m of=/dev/rdisk6
+    $ sudo dd bs=1m if=rpi_armhf_coziee_YYYY-MM-DD.dmg | pv -s 16G | sudo dd bs=1m of=/dev/rdisk6
     ```
 
 ## 11. Check System Information of Raspberry Pi 
 
+* Print system information
+    ```shell
+    $ uname -a
+    ```
+* Print CPU infromation and hardware model
+    ```shell
+    $ cat /proc/cpuinfo
+    ```
 * Display Linux processes:
     ```shell
     $ top -i
