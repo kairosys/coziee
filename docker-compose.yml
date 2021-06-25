@@ -8,9 +8,7 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - mosquitto-config-vol:/mosquitto/config
-      - mosquitto-data-vol:/mosquitto/data
-      - mosquitto-log-vol:/mosquitto/log
+      - mosquitto-vol:/mosquitto
     environment:
       - TZ=Asia/Hong_Kong
 
@@ -61,12 +59,8 @@ services:
       - TZ=Asia/Hong_Kong
 
 volumes:
-  mosquitto-config-vol:
-    name: mosquitto-config-vol
-  mosquitto-data-vol:
-    name: mosquitto-data-vol
-  mosquitto-log-vol:
-    name: mosquitto-log-vol
+  mosquitto-vol:
+    name: mosquitto-vol
   zigbee2mqtt-vol:
     name: zigbee2mqtt-vol
   homebridge-vol:

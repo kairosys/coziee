@@ -30,7 +30,7 @@
 
     # Check the status of WiFi connection
     $ iwconfig
-    $ cat /etc/wpa_supplicant/wpa_supplicant.conf
+    $ sudo cat /etc/wpa_supplicant/wpa_supplicant.conf
 
     $ sudo raspi-config
     # System Options > Hostname
@@ -173,6 +173,7 @@
 * Edit `mosquitto.conf`:
     ```shell
     $ docker exec -it mosquitto mosquitto_passwd -c /mosquitto/config/passwd coziee
+    $ docker exec -it mosquitto chown mosquitt:mosquitt /mosquitto/config/passwd
     $ docker exec -it mosquitto ls -latr /mosquitto/config
     $ docker exec -it mosquitto vi /mosquitto/config/mosquitto.conf
     ```
@@ -318,7 +319,7 @@
 * Use `dd` command to backup SD card via raw disk `/dev/rdiskX` and pipe through `pv` command with the provide of input size:
     ```shell
     $ cd ~/Downloads
-    $ sudo dd if=/dev/rdisk6 bs=1m  | pv -s 16G | sudo dd of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1m
+    $ sudo dd if=/dev/rdisk5 bs=1m  | pv -s 16G | sudo dd of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1m
     ```
 * Alternatively for macOS, pressing `CTRL+T` to track the progress of `dd` command.
     ```shell
@@ -329,8 +330,8 @@
     ```
 * Use `dd` command to restore SD card:
     ```shell
-    $ diskutil unmountDisk /dev/disk6
-    $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/rdisk6 bs=1m
+    $ diskutil unmountDisk /dev/disk5
+    $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/rdisk5 bs=1m
     ```
 
 ## 11. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
@@ -346,12 +347,12 @@
 * Use `gdd` command to backup SD card via raw disk `/dev/rdiskX` with status option:
     ```shell
     $ cd ~/Downloads
-    $ sudo gdd if=/dev/rdisk6 of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1M status=progress
+    $ sudo gdd if=/dev/rdisk5 of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1M status=progress
     ```
 * Use `gdd` command to restore SD card:
     ```shell
-    $ diskutil unmountDisk /dev/disk6
-    $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg of=/dev/rdisk6 bs=1M status=progress
+    $ diskutil unmountDisk /dev/disk5
+    $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg of=/dev/rdisk5 bs=1M status=progress
     ```
 
 ## 12. Check System Information of Raspberry Pi 
