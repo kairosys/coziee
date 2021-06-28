@@ -1,19 +1,19 @@
 # Coziee - Smart Home Automation System
 
-
 ## Table of Contents <!-- omit in toc -->
 - [1. Install & Configure Raspberry Pi OS](#1-install--configure-raspberry-pi-os)
 - [2. Install Docker CE & Docker Compose on Raspberry Pi](#2-install-docker-ce--docker-compose-on-raspberry-pi)
 - [3. Flashing CC2531 USB stick at Raspberry Pi](#3-flashing-cc2531-usb-stick-at-raspberry-pi)
-- [4. Run `Coziee` containers on Raspberry Pi](#4-run-coziee-containers-on-raspberry-pi)
+- [4. Run `coziee` containers on Raspberry Pi](#4-run-coziee-containers-on-raspberry-pi)
 - [5. Configure `mosquitto` container](#5-configure-mosquitto-container)
 - [6. Configure `zigbee2mqtt` container](#6-configure-zigbee2mqtt-container)
 - [7. Configure `homebridge` container](#7-configure-homebridge-container)
 - [8. Configure `nodered` container](#8-configure-nodered-container)
-- [9. Backup & Restore Configurations](#9-backup--restore-configurations)
-- [10. Backup & Restore Raspberry Pi SD Card (with `dd` command)](#10-backup--restore-raspberry-pi-sd-card-with-dd-command)
-- [11. Backup & Restore Raspberry Pi SD Card (with `gdd` command)](#11-backup--restore-raspberry-pi-sd-card-with-gdd-command)
-- [12. Check System Information of Raspberry Pi](#12-check-system-information-of-raspberry-pi)
+- [9. Configure `telegraf` container](#9-configure-telegraf-container)
+- [10. Backup & Restore Configurations](#10-backup--restore-configurations)
+- [11. Backup & Restore Raspberry Pi SD Card (with `dd` command)](#11-backup--restore-raspberry-pi-sd-card-with-dd-command)
+- [12. Backup & Restore Raspberry Pi SD Card (with `gdd` command)](#12-backup--restore-raspberry-pi-sd-card-with-gdd-command)
+- [13. Check System Information of Raspberry Pi](#13-check-system-information-of-raspberry-pi)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -143,13 +143,13 @@
     $ id
     ```
 
-## 4. Run `Coziee` containers on Raspberry Pi
+## 4. Run `coziee` containers on Raspberry Pi
 
 * Connect docker remote host with context
     ```shell
-    $ docker context create rpi --docker "host=ssh://pi@raspberrypi.local"
+    $ docker context create coziee --docker "host=ssh://pi@raspberrypi.local"
     $ docker context ls
-    $ docker context use rpi
+    $ docker context use coziee
     $ docker ps
     ```
 * Docker pull images at Raspberry Pi
@@ -158,11 +158,12 @@
     $ docker pull koenkk/zigbee2mqtt
     $ docker pull oznu/homebridge
     $ docker pull nodered/node-red
+    $ docker pull telegraf
     ```
-* Start Coziee with docker compose on Raspberry Pi
+* Start `coziee` with docker compose on Raspberry Pi
     ```shell
     $ cd ~/Workspaces/coziee
-    $ docker context use rpi
+    $ docker context use coziee
     $ docker compose config
     $ docker compose up -d
     $ docker compose logs -f
@@ -285,7 +286,78 @@
     ```
 * NodeRed Editor: http://raspberrypi.local:1880
 
-## 9. Backup & Restore Configurations
+## 9. Configure `telegraf` container
+
+* Edit `telegraf.conf`:
+    ```shell
+    $ docker run --rm -it -v telegraf-vol:/etc/telegraf alpine vi /etc/telegraf/telegraf.conf
+    ```
+* Update as follow:
+    ```conf
+    ...
+    # Configuration for sending metrics to InfluxDB
+    # [[outputs.influxdb]]
+    ...
+    # Configuration for sending metrics to InfluxDB
+    [[outputs.influxdb_v2]]
+      ## The URLs of the InfluxDB cluster nodes.
+      urls = ["http://192.168.1.3:8086"]
+
+      ## Token for authentication.
+      token = "$TOKEN"
+
+      ## Organization is the name of the organization you wish to write to; must exist.
+      organization = "Homelab"
+
+      ## Destination bucket to write into.
+      bucket = "telegraf"
+
+      namedrop = ["sensor"]
+    ...
+    [[outputs.influxdb_v2]]
+      ## The URLs of the InfluxDB cluster nodes.
+      urls = ["http://192.168.1.3:8086"]
+
+      ## Token for authentication.
+      token = "$TOKEN"
+
+      ## Organization is the name of the organization you wish to write to; must exist.
+      organization = "Homelab"
+
+      ## Destination bucket to write into.
+      bucket = "sensors"
+
+      namepass = ["sensor"]
+    ...
+    # Read metrics from MQTT topic(s)
+    [[inputs.mqtt_consumer]]
+      
+      name_override = "sensor"
+
+      ## Broker URLs for the MQTT server or cluster.
+      servers = ["tcp://mosquitto:1883"]
+
+      ## Topics that will be subscribed to.
+      topics = [
+        "telegraf/host01/cpu",
+        "telegraf/+/mem",
+        "sensors/#",
+      ]
+    ...
+      ## Username and password to connect MQTT server.
+      username = ""
+      password = ""
+    ...
+      ## Data format to consume.
+      data_format = "value"
+      data_type = "float"
+    ```
+* Restart container:
+    ```shell
+    $ docker compose restart telegraf
+    ```
+
+## 10. Backup & Restore Configurations
 
 * Backup configuration files:
     ```shell
@@ -295,6 +367,7 @@
     $ docker cp -a zigbee2mqtt:/app/data/configuration.yaml .
     $ docker cp -a homebridge:/homebridge/config.json .
     $ docker cp -a nodered:/data/settings.js .
+    $ docker cp -a telegraf:/etc/telegraf/telegraf.conf .
     ```
 * Restore configuration files:
     ```shell
@@ -304,9 +377,10 @@
     $ docker cp -a configuration.yaml zigbee2mqtt:/app/data
     $ docker cp -a config.json homebridge:/homebridge
     $ docker cp -a settings.js nodered:/data
+    $ docker cp -a telegraf.conf telegraf:/etc/telegraf
     ```
 
-## 10. Backup & Restore Raspberry Pi SD Card (with `dd` command)
+## 11. Backup & Restore Raspberry Pi SD Card (with `dd` command)
 
 * Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
     ```shell
@@ -334,7 +408,7 @@
     $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/rdisk5 bs=1m
     ```
 
-## 11. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
+## 12. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
 
 * Install `coreutils` with a version of `dd` command that supports the status option.
     ```shell
@@ -355,7 +429,7 @@
     $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg of=/dev/rdisk5 bs=1M status=progress
     ```
 
-## 12. Check System Information of Raspberry Pi 
+## 13. Check System Information of Raspberry Pi 
 
 * Print system information
     ```shell

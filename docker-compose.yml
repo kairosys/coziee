@@ -58,6 +58,31 @@ services:
     environment:
       - TZ=Asia/Hong_Kong
 
+  telegraf:
+    container_name: telegraf
+    image: telegraf
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+    hostname: coziee.local
+    volumes:
+      - telegraf-vol:/etc/telegraf
+      - /:/hostfs:ro
+      - /etc:/hostfs/etc:ro
+      - /proc:/hostfs/proc:ro
+      - /sys:/hostfs/sys:ro
+      - /var:/hostfs/var:ro
+      - /run:/hostfs/run:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - HOST_ETC=/hostfs/etc
+      - HOST_PROC=/hostfs/proc
+      - HOST_SYS=/hostfs/sys
+      - HOST_VAR=/hostfs/var
+      - HOST_RUN=/hostfs/run
+      - HOST_MOUNT_PREFIX=/hostfs
+      - TZ=Asia/Hong_Kong
+
 volumes:
   mosquitto-vol:
     name: mosquitto-vol
@@ -67,3 +92,5 @@ volumes:
     name: homebridge-vol
   nodered-vol:
     name: nodered-vol
+  telegraf-vol:
+    name: telegraf-vol
