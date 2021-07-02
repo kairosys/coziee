@@ -51,6 +51,7 @@ services:
       - mosquitto
       - homebridge
     restart: unless-stopped
+    network_mode: host
     ports:
       - "1880:1880"
     volumes:

@@ -285,6 +285,12 @@
     $ docker compose restart nodered
     ```
 * NodeRed Editor: http://raspberrypi.local:1880
+* Settings > Palette > Install
+    - node-red-node-openweathermap
+    - node-red-contrib-homebridge-automation
+    - node-red-contrib-huemagic
+    - node-red-contrib-telegrambot
+    - node-red-contrib-time-range-switch
 
 ## 9. Configure `telegraf` container
 
