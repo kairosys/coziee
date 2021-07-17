@@ -289,8 +289,8 @@
     - node-red-node-openweathermap
     - node-red-contrib-homebridge-automation
     - node-red-contrib-huemagic
+    - node-red-contrib-chronos
     - node-red-contrib-telegrambot
-    - node-red-contrib-time-range-switch
 
 ## 9. Configure `telegraf` container
 
