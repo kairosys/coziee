@@ -296,7 +296,7 @@
 
 * Edit `telegraf.conf`:
     ```shell
-    $ docker run --rm -it -v telegraf-vol:/etc/telegraf alpine vi /etc/telegraf/telegraf.conf
+    $ docker run --rm -it -v telegraf-vol:/etc/telegraf busybox vi /etc/telegraf/telegraf.conf
     ```
 * Update as follow:
     ```conf
@@ -307,7 +307,7 @@
     # Configuration for sending metrics to InfluxDB
     [[outputs.influxdb_v2]]
       ## The URLs of the InfluxDB cluster nodes.
-      urls = ["http://192.168.1.3:8086"]
+      urls = ["http://192.168.1.2:8086"]
 
       ## Token for authentication.
       token = "$TOKEN"
@@ -322,7 +322,7 @@
     ...
     [[outputs.influxdb_v2]]
       ## The URLs of the InfluxDB cluster nodes.
-      urls = ["http://192.168.1.3:8086"]
+      urls = ["http://192.168.1.2:8086"]
 
       ## Token for authentication.
       token = "$TOKEN"
@@ -385,7 +385,7 @@
     $ docker cp -a settings.js nodered:/data
     $ docker cp -a telegraf.conf telegraf:/etc/telegraf
     ```
-
+docker
 ## 11. Backup & Restore Raspberry Pi SD Card (with `dd` command)
 
 * Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
