@@ -249,7 +249,7 @@
     - Server: mqtt://localhost:1883 (default)
     - Username: coziee
     - Password
-* [Install `homebridge-platform-wemo` plugin](https://github.com/bwp91/homebridge-platform-wemo/wiki/Installation)
+* [Install `homebridge-wemo` plugin](https://github.com/bwp91/homebridge-wemo/wiki/Installation)
 * [Install `homebridge-tplink-smarthome` plugin](https://github.com/plasticrake/homebridge-tplink-smarthome#homebridge-config-ui-x-installation)
 * [Install `homebridge-dyson-pure-cool` plugin](https://github.com/lukasroegner/homebridge-dyson-pure-cool#installation)
 * Restart Homebridge to reload plugins configuration
