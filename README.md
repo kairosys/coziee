@@ -10,10 +10,11 @@
 - [7. Configure `homebridge` container](#7-configure-homebridge-container)
 - [8. Configure `nodered` container](#8-configure-nodered-container)
 - [9. Configure `telegraf` container](#9-configure-telegraf-container)
-- [10. Backup & Restore Configurations](#10-backup--restore-configurations)
-- [11. Backup & Restore Raspberry Pi SD Card (with `dd` command)](#11-backup--restore-raspberry-pi-sd-card-with-dd-command)
-- [12. Backup & Restore Raspberry Pi SD Card (with `gdd` command)](#12-backup--restore-raspberry-pi-sd-card-with-gdd-command)
-- [13. Check System Information of Raspberry Pi](#13-check-system-information-of-raspberry-pi)
+- [10. Upgrade `coziee` containers on Raspberry Pi](#10-upgrade-coziee-containers-on-raspberry-pi)
+- [11. Backup & Restore Configurations](#11-backup--restore-configurations)
+- [12. Backup & Restore Raspberry Pi SD Card (with `dd` command)](#12-backup--restore-raspberry-pi-sd-card-with-dd-command)
+- [13. Backup & Restore Raspberry Pi SD Card (with `gdd` command)](#13-backup--restore-raspberry-pi-sd-card-with-gdd-command)
+- [14. Check System Information of Raspberry Pi](#14-check-system-information-of-raspberry-pi)
 
 ## 1. Install & Configure Raspberry Pi OS
 
@@ -335,6 +336,12 @@
 
       namepass = ["sensor"]
     ...
+    # Read metrics about disk usage by mount point
+    [[inputs.disk]]
+    ...
+      ## Ignore mount points by filesystem type.
+      ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs", "nsfs"]
+    ...
     # Read metrics from MQTT topic(s)
     [[inputs.mqtt_consumer]]
       
@@ -357,13 +364,26 @@
       ## Data format to consume.
       data_format = "value"
       data_type = "float"
+    ...
     ```
 * Restart container:
     ```shell
     $ docker compose restart telegraf
     ```
 
-## 10. Backup & Restore Configurations
+## 10. Upgrade `coziee` containers on Raspberry Pi
+
+* Upgrade `coziee` containers on Raspberry Pi:
+    ```shell
+    $ cd ~/Workspaces/coziee
+    $ docker context use coziee
+    $ docker compose pull
+    $ docker compose up -d
+    $ docker compose logs -f
+    $ docker image prune -a
+    ```
+
+## 11. Backup & Restore Configurations
 
 * Backup configuration files:
     ```shell
@@ -386,7 +406,7 @@
     $ docker cp -a telegraf.conf telegraf:/etc/telegraf
     ```
 docker
-## 11. Backup & Restore Raspberry Pi SD Card (with `dd` command)
+## 12. Backup & Restore Raspberry Pi SD Card (with `dd` command)
 
 * Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
     ```shell
@@ -414,7 +434,7 @@ docker
     $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/rdisk5 bs=1m
     ```
 
-## 12. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
+## 13. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
 
 * Install `coreutils` with a version of `dd` command that supports the status option.
     ```shell
@@ -435,7 +455,7 @@ docker
     $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg of=/dev/rdisk5 bs=1M status=progress
     ```
 
-## 13. Check System Information of Raspberry Pi 
+## 14. Check System Information of Raspberry Pi 
 
 * Print system information
     ```shell
