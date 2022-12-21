@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 services:
   mosquitto:
     container_name: mosquitto
@@ -7,10 +7,10 @@ services:
     ports:
       - "1883:1883"
       - "9001:9001"
-    volumes:
-      - mosquitto-vol:/mosquitto
     environment:
       - TZ=Asia/Hong_Kong
+    volumes:
+      - mosquitto-vol:/mosquitto
 
   zigbee2mqtt:
     container_name: zigbee2mqtt
@@ -18,29 +18,30 @@ services:
     depends_on:
       - mosquitto
     restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Asia/Hong_Kong
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
     volumes:
       - zigbee2mqtt-vol:/app/data
       - /run/udev:/run/udev:ro
-    devices:
-      - /dev/ttyACM0:/dev/ttyACM0
-    network_mode: host
-    privileged: true
-    environment:
-      - TZ=Asia/Hong_Kong
 
   homebridge:
     container_name: homebridge
-    image: oznu/homebridge:latest
+    image: oznu/homebridge
     depends_on:
       - mosquitto
     restart: unless-stopped
     network_mode: host
     environment:
-      - PGID=1000
-      - PUID=1000
-      - HOMEBRIDGE_CONFIG_UI=1
-      - HOMEBRIDGE_CONFIG_UI_PORT=8581
       - TZ=Asia/Hong_Kong
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
     volumes:
       - homebridge-vol:/homebridge
 
@@ -51,7 +52,6 @@ services:
       - mosquitto
       - homebridge
     restart: unless-stopped
-    network_mode: host
     ports:
       - "1880:1880"
     volumes:
@@ -66,6 +66,14 @@ services:
       - mosquitto
     restart: unless-stopped
     hostname: coziee.local
+    environment:
+      - HOST_ETC=/hostfs/etc
+      - HOST_PROC=/hostfs/proc
+      - HOST_SYS=/hostfs/sys
+      - HOST_VAR=/hostfs/var
+      - HOST_RUN=/hostfs/run
+      - HOST_MOUNT_PREFIX=/hostfs
+      - TZ=Asia/Hong_Kong
     volumes:
       - telegraf-vol:/etc/telegraf
       - /:/hostfs:ro
@@ -75,14 +83,6 @@ services:
       - /var:/hostfs/var:ro
       - /run:/hostfs/run:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - HOST_ETC=/hostfs/etc
-      - HOST_PROC=/hostfs/proc
-      - HOST_SYS=/hostfs/sys
-      - HOST_VAR=/hostfs/var
-      - HOST_RUN=/hostfs/run
-      - HOST_MOUNT_PREFIX=/hostfs
-      - TZ=Asia/Hong_Kong
 
 volumes:
   mosquitto-vol:
