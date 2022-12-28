@@ -436,10 +436,10 @@ docker
   ```shell
   $ diskutil list
   ```
-* Use `dd` command to backup SD card via raw disk `/dev/rdiskX` and pipe through `pv` command with the provide of input size:
+* Use `dd` command to backup SD card via raw disk `/dev/disk4` and pipe through `pv` command with the provide of input size:
   ```shell
   $ cd ~/Downloads
-  $ sudo dd if=/dev/disk4 bs=1m  | pv -s 16G | sudo dd of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1m
+  $ sudo dd if=/dev/disk4 bs=1m  | pv -s 16G | sudo dd of=rpi_arm64_coziee_"`date +"%Y-%m-%d"`".dmg bs=1m
   ```
 * Alternatively for macOS, pressing `CTRL+T` to track the progress of `dd` command.
   ```shell
@@ -451,7 +451,7 @@ docker
 * Use `dd` command to restore SD card:
   ```shell
   $ diskutil unmountDisk /dev/disk5
-  $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/disk4 bs=1m
+  $ sudo dd if=rpi_arm64_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/disk4 bs=1m
   ```
 
 ## 13. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
@@ -467,12 +467,12 @@ docker
 * Use `gdd` command to backup SD card via raw disk `/dev/disk4` with status option:
   ```shell
   $ cd ~/Downloads
-  $ sudo gdd if=/dev/disk4 of=rpi_armhf_coziee_"`date +"%Y-%m-%d"`".dmg bs=1M status=progress
+  $ sudo gdd if=/dev/disk4 of=rpi_arm64_coziee_"`date +"%Y-%m-%d"`".dmg bs=1M status=progress
   ```
 * Use `gdd` command to restore SD card:
   ```shell
   $ diskutil unmountDisk /dev/disk5
-  $ sudo dd if=rpi_armhf_coziee_YYYY-MM-DD.dmg of=/dev/disk4 bs=1M status=progress
+  $ sudo dd if=rpi_arm64_coziee_YYYY-MM-DD.dmg of=/dev/disk4 bs=1M status=progress
   ```
 
 ## 14. Check System Information of Raspberry Pi 
