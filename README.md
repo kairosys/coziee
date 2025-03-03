@@ -16,8 +16,8 @@
 - [13. Backup \& Restore Raspberry Pi SD Card (with `gdd` command)](#13-backup--restore-raspberry-pi-sd-card-with-gdd-command)
 - [14. Check System Information of Raspberry Pi](#14-check-system-information-of-raspberry-pi)
 
-## 1. Install & Configure Raspberry Pi OS
 
+## 1. Install & Configure Raspberry Pi OS
 * [Download Raspberry Pi OS Lite (64-bit)](https://www.raspberrypi.org/software/operating-systems/)
 * [Install Raspberry Pi OS using Raspberry Pi Imager](https://www.raspberrypi.org/software/)
 * [Using Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#using-raspberry-pi-imager)
@@ -103,8 +103,8 @@
   $ ssh pi@raspberrypi.local
   ```
 
-## 2. Install Docker Engine on Raspberry Pi
 
+## 2. Install Docker Engine on Raspberry Pi
 * Install Docker Engine on Raspberry Pi OS
   ```shell
   $ curl -fsSL https://get.docker.com -o get-docker.sh
@@ -131,8 +131,8 @@
   $ docker image rm hello-world
   ```
 
-## 3. Flashing CC2531 USB stick at Raspberry Pi
 
+## 3. Flashing CC2531 USB stick at Raspberry Pi
 * [Flashing the CC2531 USB stick](https://www.zigbee2mqtt.io/information/flashing_the_cc2531.html)
   ```shell
   $ sudo apt-get install -y dh-autoreconf libusb-1.0-0-dev libboost-all-dev
@@ -156,14 +156,14 @@
   $ id
   ```
 
-## 4. Run `coziee` containers on Raspberry Pi
 
-* Connect docker remote host with context
+## 4. Run `coziee` containers on Raspberry Pi
+* Copy `docker-compose.yml` file into Raspberry Pi
   ```shell
-  $ docker context create coziee --docker "host=ssh://pi@raspberrypi.local"
-  $ docker context ls
-  $ docker context use coziee
-  $ docker ps
+  $ cd ~/Workspaces/coziee
+  $ scp docker-compose.yml pi@raspberrypi.local:~
+  $ ssh pi@raspberrypi.local
+  $ ls -latr docker-compose.yml
   ```
 * Docker pull images at Raspberry Pi
   ```shell
@@ -175,15 +175,13 @@
   ```
 * Start `coziee` with docker compose on Raspberry Pi
   ```shell
-  $ cd ~/Workspaces/coziee
-  $ docker context use coziee
   $ docker compose config
   $ docker compose up -d
   $ docker compose logs -f
   ```
 
-## 5. Configure `mosquitto` container
 
+## 5. Configure `mosquitto` container
 * Edit `mosquitto.conf`:
   ```shell
   $ docker exec -it mosquitto mosquitto_passwd -c /mosquitto/config/passwd coziee
@@ -213,8 +211,8 @@
   $ docker compose logs -f mosquitto
   ```
 
-## 6. Configure `zigbee2mqtt` container
 
+## 6. Configure `zigbee2mqtt` container
 * Edit `configuration.yaml`:
   ```shell
   # Edit directly at zigbee2mqtt container
@@ -254,8 +252,8 @@
   - bedroom_occupancy
   - outdoor_weather
 
-## 7. Configure `homebridge` container
 
+## 7. Configure `homebridge` container
 * Homebridge UI: http://raspberrypi.local:8581
   - Create user account with username and password
 * Edit Users: Setting > User Accounts > Administrator > Edit
@@ -277,8 +275,8 @@
 * Scan the QR code with the camera on iOS device to add to Apple Home.
 * Setting > Backup / Restore > Download Backup Archive
 
-## 8. Configure `nodered` container
 
+## 8. Configure `nodered` container
 * Generating the password hash
   ```shell
   $ docker exec -it nodered node-red admin hash-pw
@@ -312,8 +310,8 @@
   - node-red-contrib-chronos
   - node-red-contrib-telegrambot
 
-## 9. Configure `telegraf` container
 
+## 9. Configure `telegraf` container
 * Edit `telegraf.conf`:
   ```shell
   $ docker run --rm -it -v telegraf-vol:/etc/telegraf busybox vi /etc/telegraf/telegraf.conf
@@ -391,33 +389,50 @@
   $ docker compose logs -f telegraf
   ```
 
-## 10. Upgrade `coziee` containers on Raspberry Pi
 
-* Upgrade `coziee` containers on Raspberry Pi:
+## 10. Upgrade `coziee` containers on Raspberry Pi
+* Copy `docker-compose.yml` file into Raspberry Pi
   ```shell
   $ cd ~/Workspaces/coziee
-  $ docker context use coziee
+  $ scp docker-compose.yml pi@raspberrypi.local:~
+  $ ssh pi@raspberrypi.local
+  $ ls -latr docker-compose.yml
+  ```
+* Upgrade `coziee` containers on Raspberry Pi:
+  ```shell
   $ docker compose pull
   $ docker compose up -d
   $ docker compose logs -f
   $ docker image prune -a
   ```
 
-## 11. Backup & Restore Configurations
 
+## 11. Backup & Restore Configurations
 * Backup configuration files:
   ```shell
-  $ cd ~/Workspaces/coziee/backup
+  $ ssh pi@raspberrypi.local
+  $ mkdir ~/backup
+  $ cd ~/backup
   $ docker cp -a mosquitto:/mosquitto/config/mosquitto.conf .
   $ docker cp -a mosquitto:/mosquitto/config/passwd .
   $ docker cp -a zigbee2mqtt:/app/data/configuration.yaml .
   $ docker cp -a homebridge:/homebridge/config.json .
   $ docker cp -a nodered:/data/settings.js .
   $ docker cp -a telegraf:/etc/telegraf/telegraf.conf .
+  $ exit
+  $ scp pi@raspberrypi.local:~/backup/mosquitto.conf .
+  $ scp pi@raspberrypi.local:~/backup/passwd .
+  $ scp pi@raspberrypi.local:~/backup/configuration.yaml .
+  $ scp pi@raspberrypi.local:~/backup/config.json .
+  $ scp pi@raspberrypi.local:~/backup/settings.js .
+  $ scp pi@raspberrypi.local:~/backup/telegraf.conf .
   ```
 * Restore configuration files:
   ```shell
   $ cd ~/Workspaces/coziee/backup
+  $ scp mosquitto.conf passwd configuration.yaml config.json settings.js telegraf.conf pi@raspberrypi.local:~/backup
+  $ ssh pi@raspberrypi.local
+  $ cd ~/backup
   $ docker cp -a mosquitto.conf mosquitto:/mosquitto/config
   $ docker cp -a passwd mosquitto:/mosquitto/config
   $ docker cp -a configuration.yaml zigbee2mqtt:/app/data
@@ -425,9 +440,9 @@
   $ docker cp -a settings.js nodered:/data
   $ docker cp -a telegraf.conf telegraf:/etc/telegraf
   ```
-docker
-## 12. Backup & Restore Raspberry Pi SD Card (with `dd` command)
 
+
+## 12. Backup & Restore Raspberry Pi SD Card (with `dd` command)
 * Install [Pipe Viewer](http://www.ivarch.com/programs/pv.shtml) to track the progress of `dd` command.
   ```shell
   $ brew install pv
@@ -454,8 +469,8 @@ docker
   $ sudo dd if=rpi_arm64_coziee_YYYY-MM-DD.dmg bs=1m | pv -s 16G | sudo dd of=/dev/disk4 bs=1m
   ```
 
-## 13. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
 
+## 13. Backup & Restore Raspberry Pi SD Card (with `gdd` command)
 * Install `coreutils` with a version of `dd` command that supports the status option.
   ```shell
   $ brew install coreutils

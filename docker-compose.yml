@@ -30,7 +30,7 @@ services:
 
   homebridge:
     container_name: homebridge
-    image: oznu/homebridge
+    image: homebridge/homebridge
     depends_on:
       - mosquitto
     restart: unless-stopped
@@ -86,11 +86,16 @@ services:
 volumes:
   mosquitto-vol:
     name: mosquitto-vol
+    external: true
   zigbee2mqtt-vol:
     name: zigbee2mqtt-vol
+    external: true
   homebridge-vol:
     name: homebridge-vol
+    external: true
   nodered-vol:
     name: nodered-vol
+    external: true
   telegraf-vol:
     name: telegraf-vol
+    external: true
